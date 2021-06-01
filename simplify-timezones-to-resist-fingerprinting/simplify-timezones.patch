@@ -1,0 +1,47 @@
+diff --git a/js/src/builtin/intl/DateTimeFormat.js b/js/src/builtin/intl/DateTimeFormat.js
+--- a/js/src/builtin/intl/DateTimeFormat.js
++++ b/js/src/builtin/intl/DateTimeFormat.js
+@@ -156,32 +156,42 @@ function UnwrapDateTimeFormat(dtf) {
+         !IsWrappedDateTimeFormat(dtf) &&
+         callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), dtf))
+     {
+         dtf = dtf[intlFallbackSymbol()];
+     }
+     return dtf;
+ }
+ 
++function clampTimeZoneToPopularTimeZone(timeZone) {
++    if (timeZone === "America/Toronto") {
++        return "America/New_York";
++    } else if (timeZone === "America/Vancouver") {
++        return "America/Los_Angeles";
++    }
++    return timeZone;
++}
++
+ /**
+  * 6.4.2 CanonicalizeTimeZoneName ( timeZone )
+  *
+  * Canonicalizes the given IANA time zone name.
+  *
+  * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
+  */
+ function CanonicalizeTimeZoneName(timeZone) {
+     assert(typeof timeZone === "string", "CanonicalizeTimeZoneName");
+ 
+     // Step 1. (Not applicable, the input is already a valid IANA time zone.)
+     assert(timeZone !== "Etc/Unknown", "Invalid time zone");
+     assert(timeZone === intl_IsValidTimeZoneName(timeZone), "Time zone name not normalized");
+ 
+     // Step 2.
+-    var ianaTimeZone = intl_canonicalizeTimeZone(timeZone);
++    var unclampedIanaTimeZone = intl_canonicalizeTimeZone(timeZone);
++    var ianaTimeZone = clampTimeZoneToPopularTimeZone(unclampedIanaTimeZone);
+     assert(ianaTimeZone !== "Etc/Unknown", "Invalid canonical time zone");
+     assert(ianaTimeZone === intl_IsValidTimeZoneName(ianaTimeZone), "Unsupported canonical time zone");
+ 
+     // Step 3.
+     if (ianaTimeZone === "Etc/UTC" || ianaTimeZone === "Etc/GMT") {
+         ianaTimeZone = "UTC";
+     }
+ 
